@@ -1,0 +1,13 @@
+crewai
+langchain
+langchain-openai
+openai
+pandas
+duckdb
+plotly
+yfinance
+fastapi
+uvicorn
+python-dotenv
+streamlit
+

@@ -1,0 +1,21 @@
+Month,Deal_Name,Amount,Stage,Probability
+2024-01,Enterprise Deal A,150000,Closed Won,100
+2024-01,SMB Deal B,45000,Closed Won,100
+2024-01,Enterprise Deal C,200000,Closed Won,100
+2024-02,Enterprise Deal D,180000,Closed Won,100
+2024-02,SMB Deal E,55000,Closed Won,100
+2024-02,Enterprise Deal F,220000,Closed Won,100
+2024-03,Enterprise Deal G,190000,Closed Won,100
+2024-03,SMB Deal H,60000,Closed Won,100
+2024-03,Enterprise Deal I,240000,Closed Won,100
+2024-04,Enterprise Deal J,210000,Closed Won,100
+2024-04,SMB Deal K,65000,Closed Won,100
+2024-04,Enterprise Deal L,260000,Closed Won,100
+2024-05,Enterprise Deal M,230000,Closed Won,100
+2024-05,SMB Deal N,70000,Closed Won,100
+2024-05,Enterprise Deal O,280000,Closed Won,100
+2024-06,Enterprise Deal P,250000,Closed Won,100
+2024-06,SMB Deal Q,75000,Closed Won,100
+2024-06,Enterprise Deal R,300000,Closed Won,100
+
+

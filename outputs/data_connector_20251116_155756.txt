@@ -1,0 +1,6 @@
+Agent: Data Connector
+Query: who is disha
+Timestamp: 2025-11-16T15:58:01.701363
+============================================================
+
+I couldn't find any information about a person named Disha in our conversation context. Could you please provide more context or details about who Disha is and how she relates to our conversation about data integration, ERP, CRM, or BI? I'll be happy to help if I can.

@@ -1,12 +1,12 @@
 # agno_runner.py
-from agno_config import get_agent_config, get_workflow, client, model, temperature
+from agno_config import get_agent_config, get_workflow, llm_client
 import os
 import json
 from datetime import datetime
 
 def run_agent_task(agent_key, task_description, context=None):
     """
-    Run a single agent task using OpenAI API.
+    Run a single agent task using provider-agnostic LLM client.
     
     Args:
         agent_key: Key identifying the agent
@@ -43,14 +43,8 @@ def run_agent_task(agent_key, task_description, context=None):
     print(f"📝 Task: {task_description[:100]}...")
     
     try:
-        response = client.chat.completions.create(
-            model=model,
-            messages=messages,
-            temperature=temperature,
-            max_tokens=2000
-        )
-        
-        output = response.choices[0].message.content
+        # Use provider-agnostic LLM client
+        output = llm_client.chat_completion(messages)
         print(f"✅ Completed: {agent['name']}")
         
         return output

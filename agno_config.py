@@ -1,14 +1,18 @@
 # agno_config.py
-from llm_openai import get_openai_client, get_model_name, get_temperature
+from llm_client import LLMClient, get_default_client
 from dotenv import load_dotenv
 
 load_dotenv()
 print("✅ Environment loaded.")
 
-# Get OpenAI client and model config
-client = get_openai_client()
-model = get_model_name()
-temperature = get_temperature()
+# Get LLM client (provider-agnostic: supports openai, nim, local)
+llm_client = get_default_client()
+
+# For backward compatibility, expose client, model, and temperature
+# (in case other code still references these directly)
+client = llm_client.get_client()
+model = llm_client.model
+temperature = llm_client.temperature
 
 # --------------------------------------------------------------------
 # Define Agent Configurations (as dictionaries)

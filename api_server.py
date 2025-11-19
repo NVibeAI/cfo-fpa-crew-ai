@@ -91,5 +91,5 @@ if __name__ == "__main__":
     print("🧪 Test endpoint: http://localhost:8000/llm/nim-test")
     print("📖 API docs: http://localhost:8000/docs")
     
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8001)
 

@@ -202,7 +202,7 @@ if not st.session_state.messages:
 st.markdown("---")
 st.markdown("""
 <div style='text-align: center; color: #666;'>
-    <p><strong>Developed by Disha Vyas</strong></p>
+    <p><strong>Developed by Nvibe</strong></p>
     <p>AI-Powered Financial Assistant 🚀</p>
 </div>
 """, unsafe_allow_html=True)

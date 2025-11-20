@@ -4,28 +4,17 @@ __pycache__/
 *$py.class
 *.so
 .Python
-env/
+
+# Virtual Environment
+.venv/
 venv/
 ENV/
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
+env/
 
-# Environment variables
+# Environment Variables (CRITICAL - Keep API keys secret!)
 .env
 .env.local
+.env.*.local
 
 # IDE
 .vscode/
@@ -33,18 +22,46 @@ wheels/
 *.swp
 *.swo
 *~
+.DS_Store
+Thumbs.db
 
-# Data files (optional - uncomment if you don't want to track data)
-# data/*.csv
+# Outputs (optional - uncomment if you want to include outputs)
+outputs/*.txt
+outputs/*.json
+outputs/*.csv
+# Keep the directory but not the files
+!outputs/.gitkeep
+
+# Model test results
+model_access_report.json
+accessible_models.txt
 
 # Jupyter Notebook
 .ipynb_checkpoints
 
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+*.egg
+
+# Test files (optional)
+test_*.py
+*_test.py
+
+# Logs
+*.log
+
+# Database
+*.db
+*.sqlite
+
 # Streamlit
 .streamlit/
 
-# OS
+# macOS
 .DS_Store
+
+# Windows
 Thumbs.db
-
-
+Desktop.ini

@@ -20,9 +20,20 @@ class LLMClient:
         
         print(f"✅ LLM Client: {self.provider}")
         print(f"   Model: {self.model}")
+        print(f"   Base URL: {self.config['base_url']}")
         print(f"   API Key: {self.config['api_key'][:15]}...")
 
     def chat_completion(self, messages: List[Dict[str, str]], **kwargs) -> str:
+        """
+        Send a chat completion request to the LLM.
+        
+        Args:
+            messages: List of message dictionaries with 'role' and 'content'
+            **kwargs: Additional arguments to pass to the API
+        
+        Returns:
+            The text response from the LLM
+        """
         try:
             response = self.client.chat.completions.create(
                 model=self.model,
@@ -34,9 +45,27 @@ class LLMClient:
             return response.choices[0].message.content
         except Exception as e:
             raise RuntimeError(f"Error calling {self.provider}: {str(e)}")
+    
+    def get_client(self):
+        """
+        Return the underlying OpenAI client for backward compatibility.
+        
+        Returns:
+            The OpenAI client instance
+        """
+        return self.client
 
+# Global default client instance
 _default_client = None
+
 def get_default_client():
+    """
+    Get or create the default LLM client.
+    Uses lazy initialization to avoid loading on import.
+    
+    Returns:
+        The default LLMClient instance
+    """
     global _default_client
     if _default_client is None:
         _default_client = LLMClient()

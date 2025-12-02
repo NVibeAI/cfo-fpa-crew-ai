@@ -9,7 +9,8 @@ st.set_page_config(page_title="💼 Agno FP&A Dashboard", layout="wide")
 
 # Header
 st.title("💼 CFO Agno AI Dashboard")
-st.markdown("### Powered by OpenRouter + Llama 3.1 70B")
+from config import LLMConfig
+st.markdown(f"### Powered by {LLMConfig.LLM_PROVIDER}")
 
 # Agent selection at the TOP (not sidebar)
 st.markdown("---")
@@ -52,8 +53,14 @@ st.markdown("---")
 # Sidebar - Settings and History
 with st.sidebar:
     st.header("⚙️ Settings")
-    st.caption("🤖 Model: Llama 3.1 70B")
-    st.caption("🔗 Provider: OpenRouter")
+    from config import LLMConfig
+    st.caption(f"🤖 Provider: {LLMConfig.LLM_PROVIDER}")
+    
+    if LLMConfig.LLM_PROVIDER == "vertex_ai":
+        st.caption(f"📦 Model: {LLMConfig.VERTEX_MODEL}")
+        st.caption(f"🏢 Project: {LLMConfig.VERTEX_PROJECT_ID}")
+    elif LLMConfig.LLM_PROVIDER == "nvidia_ngc":
+        st.caption(f"🤖 Model: {LLMConfig.NVIDIA_MODEL}")
     
     st.markdown("---")
     

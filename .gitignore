@@ -64,4 +64,13 @@ test_*.py
 
 # Windows
 Thumbs.db
-Desktop.ini
+Desktop.ini.env
+service-account.json
+*.pem
+*.p12
+*.key
+.env
+service-account.json
+*.pem
+*.p12
+*.key

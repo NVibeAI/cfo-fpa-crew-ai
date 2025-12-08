@@ -74,3 +74,12 @@ service-account.json
 *.pem
 *.p12
 *.key
+# secrets
+.env
+*.env
+kaggle.json
+service-account.json
+vertex-sa.json
+**/service-account.json
+**/vertex-sa.json
+**/*credentials*.json

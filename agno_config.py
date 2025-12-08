@@ -1,190 +1,194 @@
-# agno_config.py
-from llm_client import LLMClient, get_default_client
+# agno_config.py — executive brief default + optional chart payloads + workflow exports
+
 from dotenv import load_dotenv
+from data_loader import get_data_loader
+from llm_client import LLMClient, get_default_client
 
 load_dotenv()
 print("✅ Environment loaded.")
 
-# Get LLM client (provider-agnostic: supports openai, nim, local)
+# ---- LLM client (exported so agno_runner can import)
 llm_client = get_default_client()
-
-# For backward compatibility, expose client, model, and temperature
-# (in case other code still references these directly)
 client = llm_client.get_client()
 model = llm_client.model
 temperature = llm_client.temperature
 
-# --------------------------------------------------------------------
-# Define Agent Configurations (as dictionaries)
-# --------------------------------------------------------------------
+# ---- Data context
+try:
+    dl = get_data_loader()
+    data_context = dl.describe_all()
+    print("✅ Data context loaded.")
+except Exception as e:
+    print("⚠️ Data load error:", e)
+    data_context = "No data available."
 
+# ---- Guidance blocks
+CHART_INSTRUCTIONS = """
+Charts Allowed may be passed as YES/NO.
+Default to an EXECUTIVE SUMMARY; only add a chart if BOTH:
+  (a) charts are allowed AND
+  (b) a chart materially clarifies a trend/comparison/outlier.
+
+Chart payload format (if you include one):
+##CHART-DATA##
+{
+  "chart_type": "bar" | "line" | "pie" | "area",
+  "x": "<column>",
+  "y": "<column>",
+  "title": "<chart title>",
+  "df": [ { row objects } ]   // or a columnar dict {col:[...]}
+}
+Do NOT wrap the payload in markdown code fences.
+"""
+
+KAGGLE_JOIN_RULES = """
+For US region analysis:
+- Prefer loan_with_region (already has Region) when available.
+- Otherwise JOIN loan ↔ state_region using a case-insensitive state key.
+  Candidate columns:
+    loan: addr_state, state, State, STATE, state_code, state_abbr
+    state_region: state_abbr, state, State, STATE, state_code
+- Group by Region and return numeric results (counts/sums) sorted desc.
+If a target column is missing, try the next candidate automatically.
+"""
+
+EXEC_SUMMARY_TEMPLATE = """
+Adopt the voice of a seasoned CFO/FP&A leader: decisive, concise, quantified.
+Return an EXECUTIVE SUMMARY using EXACTLY this structure:
+
+1) Snapshot KPIs — bullet list with exact figures.
+2) Highlights — 3–5 bullets (what moved and why).
+3) Risks / Watchouts — 2–4 bullets.
+4) Drivers — brief attribution (e.g., segment/region/deal).
+5) Recommendations — 2–4 concrete next steps (owner + timeline).
+
+Keep it tight. Use numbers. Only add a chart if allowed and genuinely helpful.
+"""
+
+# ---- Agents
 agents = {
     "data_connector": {
         "name": "Data Connector",
-        "role": "Integrates ERP, CRM, and BI data",
-        "goal": "Provide unified, AI-ready financial data in real time",
-        "backstory": "Expert in SAP, Salesforce, and Snowflake integrations with 10+ years experience.",
-        "system_prompt": """You are a Data Connector agent specialized in ERP, CRM, and BI integrations.
-Your expertise includes SAP, Salesforce, and Snowflake.
-Your task is to analyze data integration requirements and provide detailed summaries of data sources."""
+        "role": "Financial Data Analyst",
+        "goal": "Summarize datasets and surface useful fields/joins.",
+        "system_prompt": f"""
+You summarize available datasets and schemas, returning numeric summaries and join keys.
+
+DATA CONTEXT:
+{data_context}
+
+{EXEC_SUMMARY_TEMPLATE}
+{CHART_INSTRUCTIONS}
+""",
     },
-    
     "fpna_analyst": {
         "name": "FP&A Analyst",
-        "role": "Analyzes financial data, trends, and variances",
-        "goal": "Deliver clear insights and variance analysis for CFO decisions",
-        "backstory": "Senior financial analyst specializing in FP&A with expertise in variance analysis and forecasting.",
-        "system_prompt": """You are an FP&A Analyst with deep expertise in financial planning and analysis.
-You excel at variance analysis, trend identification, and financial forecasting.
-Provide detailed, data-driven insights with clear explanations."""
+        "role": "Revenue Analyst",
+        "goal": "Analyze revenue trends and drivers (e.g., salesforce_deals).",
+        "system_prompt": f"""
+You focus on revenue and trends. Use any relevant table as needed.
+
+DATA CONTEXT:
+{data_context}
+
+When asked for Salesforce performance, include:
+- KPIs: total revenue, QoQ change %, # deals, avg deal size.
+- Top 5 deals table (Deal_Name, Amount, Quarter/Month).
+- 3 bullets on what drove the quarter.
+
+{EXEC_SUMMARY_TEMPLATE}
+{CHART_INSTRUCTIONS}
+""",
     },
-    
     "profit_twin": {
         "name": "Profit Twin",
-        "role": "Runs what-if simulations for pricing and cost scenarios",
-        "goal": "Model profit impact and optimize gross margin",
-        "backstory": "Financial modeling expert focused on scenario planning and profitability optimization.",
-        "system_prompt": """You are a Profit Twin agent specialized in scenario modeling and profitability analysis.
-You create detailed what-if simulations for pricing and cost scenarios.
-Always provide quantitative analysis with clear assumptions."""
+        "role": "Cost Analyst",
+        "goal": "Analyze SAP costs and profitability drivers (e.g., sap_costs).",
+        "system_prompt": f"""
+You focus on costs and profit drivers. Use any relevant table as needed.
+
+DATA CONTEXT:
+{data_context}
+
+Return cost breakdowns, trends, optimizations (quick wins vs structural).
+
+{EXEC_SUMMARY_TEMPLATE}
+{CHART_INSTRUCTIONS}
+""",
     },
-    
     "cfo_copilot": {
         "name": "CFO Copilot",
-        "role": "Synthesizes insights into executive summaries",
-        "goal": "Provide strategic recommendations to leadership",
-        "backstory": "Strategic financial advisor with C-suite experience, skilled at distilling complex data into actionable insights.",
-        "system_prompt": """You are a CFO Copilot, a strategic financial advisor for C-suite executives.
-You synthesize complex financial analyses into clear, actionable executive summaries.
-Focus on strategic implications and concrete recommendations."""
-    }
+        "role": "Strategic Financial Orchestrator",
+        "goal": "Answer any financial or Kaggle-loan question directly from the data.",
+        "system_prompt": f"""
+You understand natural language (English/Hindi/Hinglish) and can use ALL loaded tables.
+Do not ask for permission; pick sensible defaults and proceed.
+
+DATA CONTEXT:
+{data_context}
+
+JOIN & REGION RULES:
+{KAGGLE_JOIN_RULES}
+
+DATE RULES:
+- Parse date columns when needed; derive Year/Quarter if helpful.
+
+ERROR HANDLING:
+- If a column is missing, try the next candidate automatically. Do not refuse.
+
+OUTPUT:
+- Provide concise numeric results with a short executive summary.
+- Only add a chart if allowed and genuinely helpful.
+
+{EXEC_SUMMARY_TEMPLATE}
+{CHART_INSTRUCTIONS}
+""",
+    },
 }
 
-# --------------------------------------------------------------------
-# Default Workflow Tasks (used if no custom input provided)
-# --------------------------------------------------------------------
-
+# ---- Default workflow (for agno_runner compatibility)
 default_workflow_tasks = [
-    {
-        "agent": "data_connector",
-        "task": """Pull and integrate ERP, CRM, and BI data for a mid-sized manufacturing company.
-        
-Provide a comprehensive summary including:
-1. List of data sources and their integration status
-2. Data quality assessment
-3. Any identified gaps or issues
-4. Recommendations for data improvement
-
-Be specific and detailed in your analysis.""",
-        "depends_on": None
-    },
-    {
-        "agent": "fpna_analyst",
-        "task": """Analyze the integrated financial data from the Data Connector.
-
-Perform variance analysis on:
-1. Monthly revenue trends (last 6 months)
-2. Expense categories and cost drivers
-3. Profit margins and profitability trends
-4. Key variances (>5%) and their root causes
-
-Provide actionable insights with supporting data.""",
-        "depends_on": ["data_connector"]
-    },
-    {
-        "agent": "profit_twin",
-        "task": """Based on the FP&A analysis, run three what-if scenarios:
-
-Scenario 1: 10% price increase across all products
-Scenario 2: 15% cost reduction in operating expenses
-Scenario 3: Combined scenario (5% price increase + 10% cost reduction)
-
-For each scenario, calculate:
-- Revenue impact
-- Cost impact
-- Net profit impact
-- Gross margin change
-- Break-even analysis
-
-Provide clear recommendations on which scenario to pursue.""",
-        "depends_on": ["fpna_analyst"]
-    },
-    {
-        "agent": "cfo_copilot",
-        "task": """Synthesize all previous analyses into an executive summary for the CFO.
-
-Your summary must include:
-1. **Financial Health Score** (1-10 with justification)
-2. **Top 3 Risks** (with mitigation strategies)
-3. **Top 3 Opportunities** (with execution recommendations)
-4. **Strategic Recommendations** (prioritized action items)
-5. **Key Metrics Dashboard** (critical KPIs to monitor)
-
-Keep it concise but comprehensive - suitable for a 5-minute executive briefing.""",
-        "depends_on": ["fpna_analyst", "profit_twin"]
-    }
+    {"agent": "data_connector", "task": "Summarize all datasets and useful columns.", "depends_on": None},
+    {"agent": "fpna_analyst",   "task": "Analyze revenue trends (e.g., salesforce_deals).", "depends_on": ["data_connector"]},
+    {"agent": "profit_twin",    "task": "Analyze cost trends (e.g., sap_costs).", "depends_on": ["fpna_analyst"]},
+    {"agent": "cfo_copilot",    "task": "Synthesize executive summary with key charts (if allowed).", "depends_on": ["profit_twin"]},
 ]
 
+# ---- API expected by agno_runner
 def get_agent_config(agent_key):
-    """Get agent configuration by key"""
     return agents.get(agent_key)
 
 def get_workflow(custom_tasks=None):
     """
-    Get the workflow configuration.
-    
-    Args:
-        custom_tasks: Dictionary with custom task prompts for each agent
-                     Example: {
-                         "data_connector": "Your custom prompt here",
-                         "fpna_analyst": "Your custom prompt here",
-                         ...
-                     }
-    
-    Returns:
-        List of workflow task configurations
+    Return a workflow list compatible with agno_runner.
+    If custom_tasks is provided like {"agent_key": "custom task", ...}, build a custom workflow.
     """
     if custom_tasks:
-        # Build custom workflow from user input
-        workflow = []
-        
-        if custom_tasks.get("data_connector"):
-            workflow.append({
-                "agent": "data_connector",
-                "task": custom_tasks["data_connector"],
-                "depends_on": None
-            })
-        
-        if custom_tasks.get("fpna_analyst"):
-            workflow.append({
-                "agent": "fpna_analyst",
-                "task": custom_tasks["fpna_analyst"],
-                "depends_on": ["data_connector"] if custom_tasks.get("data_connector") else None
-            })
-        
-        if custom_tasks.get("profit_twin"):
-            workflow.append({
-                "agent": "profit_twin",
-                "task": custom_tasks["profit_twin"],
-                "depends_on": ["fpna_analyst"] if custom_tasks.get("fpna_analyst") else None
-            })
-        
-        if custom_tasks.get("cfo_copilot"):
-            workflow.append({
-                "agent": "cfo_copilot",
-                "task": custom_tasks["cfo_copilot"],
-                "depends_on": ["fpna_analyst", "profit_twin"] if (custom_tasks.get("fpna_analyst") or custom_tasks.get("profit_twin")) else None
-            })
-        
-        return workflow if workflow else default_workflow_tasks
-    
+        wf = []
+        order = ["data_connector", "fpna_analyst", "profit_twin", "cfo_copilot"]
+        for k in order:
+            if k in custom_tasks and custom_tasks[k]:
+                wf.append({"agent": k, "task": custom_tasks[k], "depends_on": None})
+        return wf or default_workflow_tasks
     return default_workflow_tasks
 
 def get_default_prompts():
-    """Returns default prompts for each agent"""
-    return {
-        "data_connector": default_workflow_tasks[0]["task"],
-        "fpna_analyst": default_workflow_tasks[1]["task"],
-        "profit_twin": default_workflow_tasks[2]["task"],
-        "cfo_copilot": default_workflow_tasks[3]["task"]
-    }
+    return {t["agent"]: t["task"] for t in default_workflow_tasks}
+
+# ---- Optional: keep for backwards-compat
+def answer_question(query: str):
+    """Route question to CFO Copilot with executive + chart guidance embedded."""
+    from agno_runner import run_agent_task
+    task = f"""
+User Question:
+{query}
+
+Use available tables directly. Provide an executive summary.
+Only add a chart if allowed and materially helpful.
+
+{KAGGLE_JOIN_RULES}
+{EXEC_SUMMARY_TEMPLATE}
+{CHART_INSTRUCTIONS}
+"""
+    context = {"tables": dl.data, "data_context": data_context}
+    return run_agent_task("cfo_copilot", task, context=context)

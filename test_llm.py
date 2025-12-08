@@ -1,21 +1,19 @@
-from llm_openai import get_llm
+from llm_client import LLMClient
 
-# Get the configuration dictionary
-llm_config = get_llm()
-client = llm_config["client"]
-model = llm_config["model"]
+# Test Vertex AI
+print("Testing Vertex AI...")
+vertex_client = LLMClient(provider="vertex_ai")
+response = vertex_client.chat_completion([
+    {"role": "user", "content": "Say 'Vertex AI is working!' in exactly 5 words."}
+])
+print(f"Vertex AI Response: {response}")
 
-print(f"✅ Using OpenRouter base: {client.base_url}")
-print(f"✅ Model: {model}")
+# Test NVIDIA NGC
+print("\nTesting NVIDIA NGC...")
+nvidia_client = LLMClient(provider="nvidia_ngc")
+response = nvidia_client.chat_completion([
+    {"role": "user", "content": "Say 'NVIDIA is working!' in exactly 4 words."}
+])
+print(f"NVIDIA Response: {response}")
 
-# Send a test message
-response = client.chat.completions.create(
-    model=model,
-    messages=[
-        {"role": "user", "content": "Hello from CrewAI via OpenRouter!"}
-    ],
-    max_tokens=50,
-)
-
-# Print model’s reply
-print("\n✅ Model reply:\n", response.choices[0].message.content)
+print("\n✅ Both providers working!")

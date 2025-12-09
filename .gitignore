@@ -1,81 +1,30 @@
-# Python
+# ----------------------------
+# Python / Build Artifacts
+# ----------------------------
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
-
-# Virtual Environment
-.venv/
-venv/
-ENV/
-env/
-
-# Environment Variables (CRITICAL - Keep API keys secret!)
-.env
-.env.local
-.env.*.local
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-.DS_Store
-Thumbs.db
-
-# Outputs (optional - uncomment if you want to include outputs)
-outputs/*.txt
-outputs/*.json
-outputs/*.csv
-# Keep the directory but not the files
-!outputs/.gitkeep
-
-# Model test results
-model_access_report.json
-accessible_models.txt
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# Distribution / packaging
 dist/
 build/
 *.egg-info/
 *.egg
 
-# Test files (optional)
-test_*.py
-*_test.py
+# ----------------------------
+# Virtual Environments
+# ----------------------------
+.venv/
+venv/
+ENV/
+env/
 
-# Logs
-*.log
-
-# Database
-*.db
-*.sqlite
-
-# Streamlit
-.streamlit/
-
-# macOS
-.DS_Store
-
-# Windows
-Thumbs.db
-Desktop.ini.env
-service-account.json
-*.pem
-*.p12
-*.key
+# ----------------------------
+# Environment / Secrets (CRITICAL)
+# ----------------------------
 .env
-service-account.json
-*.pem
-*.p12
-*.key
-# secrets
-.env
+.env.local
+.env.*.local
 *.env
 kaggle.json
 service-account.json
@@ -83,3 +32,61 @@ vertex-sa.json
 **/service-account.json
 **/vertex-sa.json
 **/*credentials*.json
+# (Optional) Any private keys
+*.pem
+*.p12
+*.key
+
+# ----------------------------
+# IDE / OS junk
+# ----------------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ----------------------------
+# Logs / Reports
+# ----------------------------
+*.log
+model_access_report.json
+accessible_models.txt
+
+# ----------------------------
+# Notebooks
+# ----------------------------
+.ipynb_checkpoints/
+
+# ----------------------------
+# Streamlit
+# ----------------------------
+.streamlit/
+
+# ----------------------------
+# Tests (optional)
+# ----------------------------
+test_*.py
+*_test.py
+
+# ----------------------------
+# Outputs (optional – keep dir, ignore files)
+# ----------------------------
+outputs/*
+!outputs/.gitkeep
+
+# ----------------------------
+# Databases (optional)
+# ----------------------------
+*.db
+*.sqlite
+
+# ----------------------------
+# Cache (optional)
+# ----------------------------
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
